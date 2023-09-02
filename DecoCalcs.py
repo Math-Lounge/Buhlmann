@@ -270,11 +270,11 @@ def buhlmann( Pn, an, bn, Phe = 0, ahe = 0, bhe = 0, gf = 1 ) :
 
 #
 #
-class dive( object ) :
+class Dive( object ) :
     
     # ctor
     #
-    def __init__( self, verbose = False ) :
+    def __init__( self, GFHi, use_4min_not_5min = False, verbose = False ) :
 
         self._verbose = bool( verbose )
         self._timepat = re.compile( r"(?:(\d{1,2}):)?(\d{1,2}):(\d{1,2})" )
@@ -285,14 +285,15 @@ class dive( object ) :
         self._P = self._S
         self._Q = 0.79
         self._RQ = 0.9
-        self._GFHi = 0.85
+        self._GFHi = GFHi
         self._TCs = []
 
 # starting Pt (same for all TCs)
         sp = palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
 
 # use ZH-L16Cb (skip over 4-minute TC)
-        for tc in ZHL16N.keys() :
+        all_except_TC1 = set (ZHL16N.keys ()).difference ([{ False: 1.1, True: 1, } [use_4min_not_5min]])
+        for tc in all_except_TC1 :
             if tc == 1 : continue
             self._TCs.append( { 
                 "t" : ZHL16N[tc]["t"], 
@@ -353,11 +354,18 @@ class dive( object ) :
         t = self._time( newtimestr ) - self._T
     
         for i in range( len( self._TCs ) ) :
-            p = schreiner( Pi = self._TCs[i]["P"], 
-                          Palv = palv( Pamb = self._P, Q = self._Q, RQ = self._RQ ), 
-                          t = t, 
-                          R = arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
-                          k = kay( Th = self._TCs[i]["t"] ) )
+            Palv = palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+            p = schreiner(
+                Pi = self._TCs[i]["P"], 
+                Palv = Palv, t = t,
+                R = arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
+                k = kay( Th = self._TCs[i]["t"] ),
+            )
+            # ndl(
+            #    Palv = Palv, t = t,
+            #    R = arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
+            #    k = kay( Th = self._TCs[i]["t"] )
+            #)
             self._TCs[i]["P"] = p
             self._TCs[i]["C"] = buhlmann( Pn = self._TCs[i]["P"],
                                          an = self._TCs[i]["a"],
@@ -370,5 +378,3 @@ class dive( object ) :
         if self._verbose :
             sys.stdout.write( "* At time %f, P %f:\n" % (self._T, self._P,) )
             pprint.pprint( self._TCs )
-
-
