@@ -73,6 +73,12 @@ ZHL16N_5m = {
     ** ZHL16N_Base,
 }
 
+ZHL16N = {
+    1   : { "t" : 4.0,   "b" : 0.505,  "a" : { "A" : 1.2599, "B" : 1.2599, "C" : 1.2599 } },
+    1.1 : { "t" : 5.0,   "b" : 0.5578, "a" : { "A" : 1.1696, "B" : 1.1696, "C" : 1.1696 } },
+    ** ZHL16N_Base,
+}
+
 # Note that "B" is a misnomer as some implementations call it "C",
 # some call it "B", and nobody can read German and/or drop a hundred
 # bucks on Tauchmedizin to see what Herr Buhlmann actually said.
