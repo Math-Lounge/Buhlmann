@@ -37,7 +37,7 @@ ZHL12N = {
     13 : { "t" : 304.0, "a" : 0.255, "b" : 0.962 },
     14 : { "t" : 397.0, "a" : 0.255, "b" : 0.962 },
     15 : { "t" : 503.0, "a" : 0.255, "b" : 0.962 },
-    16 : { "t" : 635.0, "a" : 0.255, "b" : 0.962 }
+    16 : { "t" : 635.0, "a" : 0.255, "b" : 0.962 },
 }
 
 ZHL12He = {
@@ -81,7 +81,7 @@ ZHL16N = {
     13  : { "t" : 305.0, "b" : 0.9477, "a" : { "A" : 0.2971, "B" : 0.285,  "C" : 0.2835 } },
     14  : { "t" : 390.0, "b" : 0.9544, "a" : { "A" : 0.2737, "B" : 0.2737, "C" : 0.261 } },
     15  : { "t" : 498.0, "b" : 0.9602, "a" : { "A" : 0.2523, "B" : 0.2523, "C" : 0.248 } },
-    16  : { "t" : 635.0, "b" : 0.9653, "a" : { "A" : 0.2327, "B" : 0.2327, "C" : 0.2327 } }
+    16  : { "t" : 635.0, "b" : 0.9653, "a" : { "A" : 0.2327, "B" : 0.2327, "C" : 0.2327 } },
 }
 
 # Note that "B" is a misnomer as some implementations call it "C",
@@ -105,7 +105,7 @@ ZHL16He = {
     13 :  { "t" : 115.29, "a" : { "B" : 0.5181 }, "b" : 0.9122 },
     14 :  { "t" : 147.42, "a" : { "B" : 0.5176 }, "b" : 0.9171 },
     15 :  { "t" : 188.24, "a" : { "B" : 0.5172 }, "b" : 0.9217 },
-    16 :  { "t" : 240.03, "a" : { "B" : 0.5119 }, "b" : 0.9267 }
+    16 :  { "t" : 240.03, "a" : { "B" : 0.5119 }, "b" : 0.9267 },
 }
 
 # From Deco for Divers
@@ -122,7 +122,7 @@ WORKMAN = {
     6 : { "t" : 120.0, "M0" : 15.8, "M" : 1.2 },
     7 : { "t" : 160.0, "M0" : 15.5, "M" : 1.15 },
     8 : { "t" : 200.0, "M0" : 15.5, "M" : 1.1 },
-    9 : { "t" : 240.0, "M0" : 15.2, "M" : 1.1 }
+    9 : { "t" : 240.0, "M0" : 15.2, "M" : 1.1 },
 }
 
 # Also from Deco for Divers
@@ -149,7 +149,7 @@ DSAT = {
     11 : { "t" : 200.0, "M0" : 13.84 },
     12 : { "t" : 240.0, "M0" : 13.69 },
     13 : { "t" : 360.0, "M0" : 13.45 },
-    14 : { "t" : 480.0, "M0" : 13.33 }
+    14 : { "t" : 480.0, "M0" : 13.33 },
 }
 
 # return alveolar inert gas pressure
@@ -268,18 +268,30 @@ def buhlmann( Pn, an, bn, Phe = 0, ahe = 0, bhe = 0, gf = 1 ) :
     rc = num / den
     return round( rc, 4 )
 
-#
-#
+class TimeParser( object ):
+
+    _Pattern_ = re.compile( r"(?:(\d{1,2}):)?(\d{1,2}):(\d{1,2})" )
+
+    # helper function: takes human-readable time string like "1:30" and returns minutes: 1.5
+    @classmethod
+    def parse( cls, t = "0:0" ) :
+        if t is None : return 0
+        m = cls._Pattern_.search( str( t ).strip() )
+        if not m : raise Exception( "Invalid time string %s" % (t,) )
+        rc = 0.0
+        if m.group( 1 ) is not None :
+            rc = float( m.group( 1 ) ) * 60.0
+        rc += float( m.group( 2 ) )
+        rc += float( m.group( 3 ) ) / 60.0
+        return round( rc, 1 )
+
 class Dive( object ) :
     
-    # ctor
-    #
     def __init__( self, GFHi, use_4min_not_5min = False, verbose = False ) :
 
         self._verbose = bool( verbose )
-        self._timepat = re.compile( r"(?:(\d{1,2}):)?(\d{1,2}):(\d{1,2})" )
         
-# air, sea level, USN RQ. S is surface pressure (const), P is current pressure (var)
+        # air, sea level, USN RQ. S is surface pressure (const), P is current pressure (var)
         self._T = 0
         self._S = 1.0
         self._P = self._S
@@ -288,13 +300,12 @@ class Dive( object ) :
         self._GFHi = GFHi
         self._TCs = []
 
-# starting Pt (same for all TCs)
+        # starting Pt (same for all TCs)
         sp = palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
 
-# use ZH-L16Cb (skip over 4-minute TC)
+        # use ZH-L16Cb (skip over 4-minute TC)
         all_except_TC1 = set (ZHL16N.keys ()).difference ([{ False: 1.1, True: 1, } [use_4min_not_5min]])
         for tc in all_except_TC1 :
-            if tc == 1 : continue
             self._TCs.append( { 
                 "t" : ZHL16N[tc]["t"], 
                 "a" : ZHL16N[tc]["a"]["C"],
@@ -302,7 +313,7 @@ class Dive( object ) :
                 "P" : sp
             } )
 
-# init. ceiling
+        # init. ceiling
         for i in range( len( self._TCs ) ) :
             self._TCs[i]["C"] = buhlmann( Pn = self._TCs[i]["P"],
                                          an = self._TCs[i]["a"],
@@ -312,9 +323,7 @@ class Dive( object ) :
         if self._verbose :
             pprint.pprint( self._TCs )
             
-    # helpers for plotting
-    # (could actually do this in a more "pythonic" way but this is more obvious)
-    #
+    # helpers for plotting (could actually do this in a more "pythonic" way but this is more obvious)
     @property
     def compartments( self ) :
         rc = []
@@ -329,29 +338,15 @@ class Dive( object ) :
             rc.append( self._TCs[i]["P"] )
         return rc
 
-    # helper function: takes human-readable time string like "1:30" and returns minutes: 1.5
-    #
-    def _time( self, t = "0:0" ) :
-        if t is None : return 0
-        m = self._timepat.search( str( t ).strip() )
-        if not m : raise Exception( "Invalid time string %s" % (t,) )
-        rc = 0.0
-        if m.group( 1 ) is not None :
-            rc = float( m.group( 1 ) ) * 60.0
-        rc += float( m.group( 2 ) )
-        rc += float( m.group( 3 ) ) / 60.0
-        return round( rc, 1 )
-
     # newdepth is new depth in 0.1 bar
     # timestr is time as [hours:]minutes:seconds string. *it is the total elapsed* time
-    #
     def segment( self, newdepth = 0.0, newtimestr = "1:0" ) :
         assert float( newdepth ) >= 0.0
         if float( newdepth ) == 0.0 :
             newP = self._P
         else :
             newP = round( self._S + float( newdepth ) / 10, 1 )
-        t = self._time( newtimestr ) - self._T
+        t = TimeParser.parse( newtimestr ) - self._T
     
         for i in range( len( self._TCs ) ) :
             Palv = palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
@@ -367,10 +362,12 @@ class Dive( object ) :
             #    k = kay( Th = self._TCs[i]["t"] )
             #)
             self._TCs[i]["P"] = p
-            self._TCs[i]["C"] = buhlmann( Pn = self._TCs[i]["P"],
-                                         an = self._TCs[i]["a"],
-                                         bn = self._TCs[i]["b"],
-                                         gf = self._GFHi )
+            self._TCs[i]["C"] = buhlmann(
+                Pn = self._TCs[i]["P"],
+                an = self._TCs[i]["a"],
+                bn = self._TCs[i]["b"],
+                gf = self._GFHi,
+            )
 
         self._P = newP
         self._T += t
