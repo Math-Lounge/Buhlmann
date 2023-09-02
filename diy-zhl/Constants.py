@@ -43,7 +43,8 @@ ZHL12He = {
 # http://www.nigelhewitt.co.uk/stuff/aab.jpg
 # It appears nobody has Helium numbers for "-A" and "-C", nor for the 4-minute TC
 # 5-minute TC is keyed as 1.1.
-#
+# Why does the 'a' column have multiple values? Big-X corresponds to ZHL-16_*X*
+# We primarily care about the 'C' model. We can observe the differences in the image linked
 ZHL16N_Base = {
     2   : { "t" : 8.0,   "b" : 0.6514, "a" : { "A" : 1.0,    "B" : 1.0,    "C" : 1.0 } },
     3   : { "t" : 12.5,  "b" : 0.7222, "a" : { "A" : 0.8618, "B" : 0.8618, "C" : 0.8618 } },

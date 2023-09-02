@@ -36,7 +36,7 @@ class TimeParser( object ):
         return round( rc, 1 )
 
 class Dive( object ) :
-    
+
     def __init__( self, GFHi, use_4min_not_5min = False, verbose = False ) :
 
         self._verbose = bool( verbose )
@@ -93,25 +93,25 @@ class Dive( object ) :
         else :
             newP = round( self._S + float( newdepth ) / 10, 1 )
         t = TimeParser.parse( newtimestr ) - self._T
-    
+
         for i in range( len( self._TCs ) ) :
+            # These two should be constant, consider moving them outside
             Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+            R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
             p = Equations.schreiner(
-                Pi = self._TCs[i]["P"], Palv = Palv, t = t,
-                R = Equations.arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
+                Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R,
                 k = Equations.kay( Th = self._TCs[i]["t"] ),
             )
             # ndl(
-            #    Palv = Palv, t = t,
-            #    R = arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
-            #    k = kay( Th = self._TCs[i]["t"] )
+            #    Palv = Palv, t = t, R = R,
+            #    k = kay( Th = self._TCs[i]["t"] ),
             #)
             self._TCs[i]["P"] = p
             self._TCs[i]["C"] = self.runBuhlmanTC( i )
 
         self._P = newP
         self._T += t
-    
+
         if self._verbose :
             sys.stdout.write( "* At time %f, P %f:\n" % (self._T, self._P,) )
             pprint.pprint( self._TCs )

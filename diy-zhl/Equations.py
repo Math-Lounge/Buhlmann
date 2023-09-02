@@ -23,8 +23,8 @@ def kay( Th = 5 ) :
 # dt : end pressure, bar
 # t : time, min
 # Q : fraction of inert gas (same Q as in palv()
-#
-def arr( d0 = 1.0, dt = 1.0, t = 1, Q = 0.79 ) :
+# Formerly called arr
+def dP_dt( d0 = 1.0, dt = 1.0, t = 1, Q = 0.79 ) :
     assert float( t ) > 0.0
     dP = (float( dt ) - float( d0 )) / float( t )
     rc = dP * float( Q )
@@ -38,7 +38,7 @@ def arr( d0 = 1.0, dt = 1.0, t = 1, Q = 0.79 ) :
 # Pi: initial pressure of inert gas in tissue (bar)
 # Palv: initial pressure of inert gas in the lungs (bar, output of palv())
 # t: time (minutes)\n",
-# R: rate of pressure change (output of arr()),
+# R: rate of pressure change (output of dP_dt()),
 # k: gas decay constant (output of kay()
 #
 # (Intermediate variables b/c I was playing with rounding)
@@ -79,7 +79,7 @@ def m_b2w( a = 1.1696, b = 0.5578, P = 1 ) :
 #
 # Palv: initial pressure of inert gas in the lungs (bar, output of palv())
 # t: time (minutes)
-# R: rate of pressure change (output of arr()),
+# R: rate of pressure change (output of dP_dt()),
 # k: gas decay constant (output of kay()
 #  -- same as schreiner()
 # M0: surfacing M-value as per Workman
