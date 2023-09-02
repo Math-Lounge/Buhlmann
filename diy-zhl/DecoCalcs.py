@@ -41,10 +41,10 @@ class Dive( object ) :
 
         self._verbose = bool( verbose )
         
-        # air, sea level, USN RQ. S is surface pressure (const), P is current pressure (var)
+        # air, sea level, USN RQ.
         self._T = 0
-        self._S = 1.0
-        self._P = self._S
+        self._S = 1.0       # Surface pressure (const)
+        self._P = self._S   # Current pressure (var)
         self._Q = 0.79
         self._RQ = 0.9
         self._GFHi = GFHi
@@ -53,24 +53,18 @@ class Dive( object ) :
         # starting Pt (same for all TCs)
         sp = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
 
-        # use ZH-L16Cb (skip over 4-minute TC)
-        all_except_TC1 = set (Constants.ZHL16N.keys ()).difference ([{ False: 1.1, True: 1, } [use_4min_not_5min]])
-        for tc in all_except_TC1 :
+        ZHL = [ Constants.ZHL16N_5m, Constants.ZHL16N_4m, ] [use_4min_not_5min]
+        for tc in ZHL.keys() :
             self._TCs.append( { 
-                "t" : Constants.ZHL16N[tc]["t"], 
-                "a" : Constants.ZHL16N[tc]["a"]["C"],
-                "b" : Constants.ZHL16N[tc]["b"],
+                "t" : ZHL[tc]["t"],
+                "a" : ZHL[tc]["a"]["C"],
+                "b" : ZHL[tc]["b"],
                 "P" : sp,
             } )
 
         # init. ceiling
         for i in range( len( self._TCs ) ) :
-            self._TCs[i]["C"] = Equations.buhlmann(
-                Pn = self._TCs[i]["P"],
-                an = self._TCs[i]["a"],
-                bn = self._TCs[i]["b"],
-                gf = self._GFHi,
-            )
+            self._TCs[i]["C"] = self.runBuhlmanTC( i )
             
         if self._verbose : pprint.pprint( self._TCs )
             
@@ -81,6 +75,14 @@ class Dive( object ) :
     @property
     def loadings( self ) :
         return list( map( lambda TC: TC[ 'P' ], self._TCs ) )
+
+    def runBuhlmanTC( self, i ):
+        return Equations.buhlmann(
+            Pn = self._TCs[i]["P"],
+            an = self._TCs[i]["a"],
+            bn = self._TCs[i]["b"],
+            gf = self._GFHi,
+        )
 
     # newdepth is new depth in 0.1 bar
     # timestr is time as [hours:]minutes:seconds string. *it is the total elapsed* time
@@ -95,8 +97,7 @@ class Dive( object ) :
         for i in range( len( self._TCs ) ) :
             Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
             p = Equations.schreiner(
-                Pi = self._TCs[i]["P"], 
-                Palv = Palv, t = t,
+                Pi = self._TCs[i]["P"], Palv = Palv, t = t,
                 R = Equations.arr( d0 = self._P, dt = newP, t = t, Q = self._Q ),
                 k = Equations.kay( Th = self._TCs[i]["t"] ),
             )
@@ -106,12 +107,7 @@ class Dive( object ) :
             #    k = kay( Th = self._TCs[i]["t"] )
             #)
             self._TCs[i]["P"] = p
-            self._TCs[i]["C"] = Equations.buhlmann(
-                Pn = self._TCs[i]["P"],
-                an = self._TCs[i]["a"],
-                bn = self._TCs[i]["b"],
-                gf = self._GFHi,
-            )
+            self._TCs[i]["C"] = self.runBuhlmanTC( i )
 
         self._P = newP
         self._T += t
