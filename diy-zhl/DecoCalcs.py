@@ -67,14 +67,18 @@ class Dive( object ) :
             self._TCs[i]["C"] = self.runBuhlmanTC( i )
             
         if self._verbose : pprint.pprint( self._TCs )
-            
+
     @property
     def compartments( self ) :
         return list( map( lambda TC: TC[ 't' ], self._TCs ) )
-    
+
     @property
     def loadings( self ) :
         return list( map( lambda TC: TC[ 'P' ], self._TCs ) )
+
+    @property
+    def ndl( self ) :
+        return list( map( lambda TC: TC[ 'ndl' ], self._TCs ) )
 
     def runBuhlmanTC( self, i ):
         return Equations.buhlmann(
@@ -102,10 +106,11 @@ class Dive( object ) :
                 Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R,
                 k = Equations.kay( Th = self._TCs[i]["t"] ),
             )
-            # ndl(
-            #    Palv = Palv, t = t, R = R,
-            #    k = kay( Th = self._TCs[i]["t"] ),
-            #)
+            M0 = Equations.m_b2w( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[0]
+            self._TCs[i]['ndl'] = Equations.ndl(
+                Palv = Palv, t = t, R = R, M0 = M0,
+                k = Equations.kay( Th = self._TCs[i]["t"] ),
+            )
             self._TCs[i]["P"] = p
             self._TCs[i]["C"] = self.runBuhlmanTC( i )
 

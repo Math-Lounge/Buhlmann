@@ -37,3 +37,20 @@ class TableValues (object):
     @classmethod
     def fetchDSAT (cls):
         return cls._fetch_ ('DSAT', None, False)
+
+class TimeSeriesFrame (object):
+
+    def __init__ (self, dive):
+        self.dive = dive
+        self.tissues = pd.DataFrame ()
+
+    @staticmethod
+    def snapFromDiveObj (dive):
+        df = pd.DataFrame (dive._TCs).drop ([ 'a', 'b', ], axis = 1)
+        df ['compart_num'] = 1 + np.arange (len (dive._TCs))
+        df ['time_min'] = dive._T
+        return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', })
+
+    def diveUpdate (self):
+        df = self.snapFromDiveObj (self.dive)
+        self.tissues = pd.concat ([ self.tissues, df, ], ignore_index = True)
