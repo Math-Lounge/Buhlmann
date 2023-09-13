@@ -54,3 +54,21 @@ class TimeSeriesFrame (object):
     def diveUpdate (self):
         df = self.snapFromDiveObj (self.dive)
         self.tissues = pd.concat ([ self.tissues, df, ], ignore_index = True)
+
+class BinarySearch (object):
+
+    @staticmethod
+    def hop (func, start, max_iter = 100):
+        last = False
+        for i in range (max_iter):
+            last = func (start + 2 ** i)
+            if last: break
+        if not last: raise RuntimeWarning (f'Exceeded max_iter = {max_iter}')
+        if i == 0: return start
+        LHS, RHS = 2 ** (i-1), 2 ** i
+        while RHS - LHS > 1:
+            mid = (LHS + RHS) / 2
+            last = func (start + mid)
+            if last: RHS = mid
+            else   : LHS = mid
+        return start + LHS
