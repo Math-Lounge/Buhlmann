@@ -49,7 +49,7 @@ class TimeSeriesFrame (object):
         df = pd.DataFrame (dive._TCs).drop ([ 'a', 'b', ], axis = 1)
         df ['compart_num'] = 1 + np.arange (len (dive._TCs))
         df ['time_min'] = dive._T
-        return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', })
+        return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', 'C': 'ceiling', })
 
     def diveUpdate (self):
         df = self.snapFromDiveObj (self.dive)

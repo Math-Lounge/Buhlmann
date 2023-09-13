@@ -28,11 +28,9 @@ class TimeParser( object ):
         if t is None : return 0
         m = cls._Pattern_.search( str( t ).strip() )
         if not m : raise Exception( "Invalid time string %s" % (t,) )
-        rc = 0.0
+        rc = float( m.group( 2 ) ) + float( m.group( 3 ) ) / 60.
         if m.group( 1 ) is not None :
-            rc = float( m.group( 1 ) ) * 60.0
-        rc += float( m.group( 2 ) )
-        rc += float( m.group( 3 ) ) / 60.0
+            rc += 60. * float( m.group( 1 ) )
         return round( rc, 1 )
 
 class Dive( object ) :
@@ -88,14 +86,12 @@ class Dive( object ) :
             gf = self._GFHi,
         )
 
-    # newdepth is new depth in 0.1 bar
+    # new_depth is new depth in 0.1 bar / depth in meters
     # timestr is time as [hours:]minutes:seconds string. *it is the total elapsed* time
-    def segment( self, newdepth = 0.0, newtimestr = "1:0" ) :
-        assert float( newdepth ) >= 0.0
-        if float( newdepth ) == 0.0 :
-            newP = self._P
-        else :
-            newP = round( self._S + float( newdepth ) / 10, 1 )
+    def segment( self, new_depth = 0.0, newtimestr = "1:0" ) :
+        assert new_depth >= 0.0
+        # if new_depth == 0. : newP = self._P
+        newP = round( self._S + new_depth / 10, 1 )
         t = TimeParser.parse( newtimestr ) - self._T
 
         for i in range( len( self._TCs ) ) :
@@ -120,3 +116,4 @@ class Dive( object ) :
         if self._verbose :
             sys.stdout.write( "* At time %f, P %f:\n" % (self._T, self._P,) )
             pprint.pprint( self._TCs )
+
