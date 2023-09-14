@@ -70,9 +70,9 @@ def m_w2b( M0 = 2.9624, dM = 1.7928, P = 1 ) :
 # returns pair ( M0, dM )
 #
 def m_b2w( a = 1.1696, b = 0.5578, P = 1 ) :
-    assert float( b ) > 0.0
-    M0 = float( a ) + float( P ) / float( b )
-    dM = 1.0 / float( b )
+    assert (b > 0.) if isinstance (b, float) else all (b > 0.)
+    M0 = a + P / b
+    dM = 1. / b
     return (round( M0, 4 ), round( dM, 4 ))
 
 # no-stop time by Schreiner

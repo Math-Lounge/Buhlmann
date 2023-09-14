@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-import Constants
+import Constants, Equations
 
 class TableValues (object):
 
@@ -28,6 +28,7 @@ class TableValues (object):
             drop = [ 1, 1.1, ] [use_4m_not_5m]
             df = df [~df.index.isin ([drop])]
             df.index = np.floor (df.index).astype (int)
+        df ['M0'], df ['dM'] = Equations.m_b2w (df ['a'], df ['b'])
         return df
 
     @classmethod
