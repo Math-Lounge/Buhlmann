@@ -5,7 +5,13 @@ and notebooks to show them off.
 
 ## Files
 
- - `diyzhl.py` - Python code
+ - `DecoCalcs.py` - Python code to calculate tissue loadings and deco ceilings
+
+ - `Constants.py` - Various constants like ZHL-16C compartment A/B values and tissue half-lives
+
+ - `Equations.py` - Standalone calculations for Buhlmann tissues
+
+ - `Utilities.py` - Pandas helpers & binary search functions
 
  - `diyzhl.ipynb` - **Start here** what passes for documentation for the above
 
@@ -15,7 +21,7 @@ and notebooks to show them off.
 
 ## Running
 
- - Run in binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmaziuk/diy-zhl/master)
+ - Run in binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Math-Lounge/Buhlmann/HEAD)
 (you can't save your changes, it may take forever to start as this are big `conda scipy` notebooks)
 
  - If your computer can run `docker` containers, download the files here to a directory and run in there:
