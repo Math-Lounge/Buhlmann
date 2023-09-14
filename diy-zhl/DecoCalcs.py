@@ -88,7 +88,7 @@ class Dive( object ) :
 
     def _calcNDLCeilingTC_( self, i, Palv, R, t ):
         p = Equations.schreiner(
-            Pi = self._TCs[i]["P"], Palv = Palv, R = E, t = t,
+            Pi = self._TCs[i]["P"], Palv = Palv, R = R, t = t,
             k = Equations.kay( Th = self._TCs[i]["t"] ),
         )
         ceil = self._runBuhlmanTC_( i, Pn = p )
@@ -96,8 +96,9 @@ class Dive( object ) :
 
     def _calcNDLTimeTC_( self, i, start = 0 ):
         Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
-        calc_ceil = lambda t: self._calcNDLCeilingTC_( i, Palv, 0., t ) > 1.
-        return Utilities.BinarySearch.hop( calc_ceil, start )
+        calc_ceil = lambda t: self._calcNDLCeilingTC_( i, Palv, 0., t )
+        ceil_below_water = lambda c: c > 0.1
+        return Utilities.BinarySearch.hop( calc_ceil, ceil_below_water, start, step = 1, eps = 1e-3 )
 
     # new_depth is new depth in 0.1 bar / depth in meters
     # timestr is time as [hours:]minutes:seconds string. *it is the total elapsed* time
@@ -116,7 +117,7 @@ class Dive( object ) :
                 k = Equations.kay( Th = self._TCs[i]["t"] ),
             )
             M0 = Equations.m_b2w( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[ 0 ]
-            if False:
+            if True:
                 self._TCs[i]['ndl'] = Equations.ndl(
                     Palv = Palv, t = t, R = R, M0 = M0,
                     k = Equations.kay( Th = self._TCs[i]["t"] ),

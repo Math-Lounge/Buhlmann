@@ -58,17 +58,32 @@ class TimeSeriesFrame (object):
 class BinarySearch (object):
 
     @staticmethod
-    def hop (func, start, max_iter = 100):
-        last = False
+    def _increasingSearch_ (func, cond, start, step, eps, max_iter):
+        last_X, last_Y = start, np.NaN
         for i in range (max_iter):
-            last = func (start + 2 ** i)
-            if last: break
-        if not last: raise RuntimeWarning (f'Exceeded max_iter = {max_iter}')
-        if i == 0: return start
-        LHS, RHS = 2 ** (i-1), 2 ** i
-        while RHS - LHS > 1:
-            mid = (LHS + RHS) / 2
-            last = func (start + mid)
-            if last: RHS = mid
-            else   : LHS = mid
-        return start + LHS
+            curr_X = start + 2 ** i * step
+            curr_Y = func (curr_X)
+            if abs (curr_Y - last_Y) < eps:
+                raise RuntimeError (f'Failed to converge = {curr_Y}')
+            if cond (curr_Y): return (last_X, curr_X, True)
+            last_X, last_Y = curr_X, curr_Y
+        return (last_X, curr_X, False)
+
+    @staticmethod
+    def _decreasingSearch_ (func, cond, LHS, RHS, step):
+        assert not cond (LHS), f'LHS value {LHS} should be false'
+        assert     cond (RHS), f'RHS value {RHS} should be true'
+        while (RHS - LHS) > step:
+            mid_X = (LHS + RHS) / 2
+            curr_Y = func (mid_X)
+            if cond (curr_Y): RHS = mid_X
+            else            : LHS = mid_X
+        return LHS # last value before ceiling violated
+
+    @classmethod
+    def hop (cls, func, cond, start, step = 1, eps = 1e-4, max_iter = 20):
+        last_X, curr_X, success = cls._increasingSearch_ (func, cond, start, step, eps, max_iter)
+        if not success: raise RuntimeWarning (f'Exceeded max_iter = {max_iter}')
+        # Why is this necessary? This checks if the first value exceeded ceiling
+        if abs (last_X - curr_X) <= step: return last_X
+        return cls._decreasingSearch_ (func, cond, last_X, curr_X, step)
