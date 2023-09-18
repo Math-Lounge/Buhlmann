@@ -61,10 +61,10 @@ def schreiner( Pi = 0.7451, Palv = 0.7451, t = 1, R = 0, k = 0.1386, verbose = F
 # TODO: add GF?
 #
 def m_w2b( M0 = 2.9624, dM = 1.7928, P = 1 ) :
-    assert float( dM ) >= 1.0
-    a = float( M0 ) - float( dM ) * float( P )
-    b = 1.0 / float( dM )
-    return (round( a, 4 ), round( b, 4 ))
+    assert (dM > 1.) if isinstance (dM, float) else all (dM > 1.)
+    a = M0 - dM * P
+    b = 1. / dM
+    return (a, b)
 
 # M-value: buhlmann to workman
 # returns pair ( M0, dM )
@@ -73,7 +73,31 @@ def m_b2w( a = 1.1696, b = 0.5578, P = 1 ) :
     assert (b > 0.) if isinstance (b, float) else all (b > 0.)
     M0 = a + P / b
     dM = 1. / b
-    return (round( M0, 4 ), round( dM, 4 ))
+    return (M0, dM)
+
+class MValueConversion (object):
+
+    @staticmethod
+    def getWorkmanFromBuhlmann(
+            zero_intercept_A     : float,
+            inverse_slope_B      : float,
+            sea_level_pressure_P : float,
+        ) \
+        -> (float, float):
+            slope_dM = 1. / inverse_slope_B
+            one_intercept_M0 = zero_intercept_A + slope_dM * sea_level_pressure_P
+            return (one_intercept_M0, slope_dM)
+
+    @staticmethod
+    def getBuhlmannFromWorkman(
+        one_intercept_M0     : float,
+        slope_dM             : float,
+        sea_level_pressure_P : float,
+    ) \
+    -> (float, float):
+        inverse_slope_B = 1. / slope_dM
+        zero_intercept_A = one_intercept_M0 - slope_dM * sea_level_pressure_P
+        return (zero_intercept_A, inverse_slope_B)
 
 # no-stop time by Schreiner
 #
