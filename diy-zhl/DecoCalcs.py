@@ -59,14 +59,13 @@ class Dive( object ) :
                 "b" : ZHL[tc]["b"],
                 "P" : sp,
             } )
-        self.TC = Utilities.TableValues.fetchZHL( 16, 'N' )
+        self.TC = Utilities.TableValues.fetchZHL( 16, 'N', use_4min_not_5min = use_4min_not_5min )
         self.TC['P'] = sp
 
         # init. ceiling
         self.TC['C'] = Equations.buhlmann( self.TC['P'], self.TC['a'], self.TC['b'], gf = self._GFHi )
         for i in range( len( self._TCs ) ) :
             self._TCs[i]['C'] = self._runBuhlmanTC_( i )
-            assert abs( self._TCs[i]['C'] - self.TC.loc[ i+1, 'C' ] ) < 1e-4
 
         if self._verbose : pprint.pprint( self._TCs )
 
@@ -83,12 +82,14 @@ class Dive( object ) :
         return list( map( lambda TC: TC[ 'ndl' ], self._TCs ) )
 
     def _runBuhlmanTC_( self, i, Pn = None ):
-        return Equations.buhlmann(
+        c = Equations.buhlmann(
             Pn = self._TCs[i]["P"] if Pn is None else Pn,
             an = self._TCs[i]["a"],
             bn = self._TCs[i]["b"],
             gf = self._GFHi,
         )
+        assert abs( c - self.TC.loc[ i+1, 'C' ] ) < 1e-4
+        return c
 
     def _calcNDLCeilingTC_( self, i, Palv, R, t ):
         p = Equations.schreiner(
@@ -115,13 +116,16 @@ class Dive( object ) :
         Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
         R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
 
+        kay = Equations.kay( self.TC['t'] )
+        self.TC['P'] = Equations.schreiner( Pi = self.TC['P'], Palv = Palv, t = t, R = R, k = kay )
+        self.TC['C'] = Equations.buhlmann( self.TC['P'], self.TC['a'], self.TC['b'], gf = self._GFHi )
         for i in range( len( self._TCs ) ) :
             kay = Equations.kay( Th = self._TCs[i]['t'] )
-            p = Equations.schreiner( Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R, k = kay )
+            self._TCs[i]["P"] = Equations.schreiner( Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R, k = kay )
             if True:
                 M0 = Equations.MValueConversion.getWorkmanFromBuhlmann( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[ 0 ]
                 self._TCs[i]['ndl'] = Equations.ndl( Palv = Palv, t = t, R = R, M0 = M0, k = kay )
-            self._TCs[i]["P"] = p
+            assert abs( self._TCs[i]['P'] - self.TC.loc[ i+1, 'P' ] ) < 1e-4
             self._TCs[i]["C"] = self._runBuhlmanTC_( i )
 
         self._P = newP

@@ -14,9 +14,9 @@ def palv( Pamb = 1, Q = 0.79, RQ = 0.9 ) :
 # Th : tissue compartment half-time in minutes
 # for 5-minute compartment it's 0.8452
 #
-def kay( Th = 5 ) :
-    assert float( Th ) > 0.0
-    return round( math.log( 2 ) / float( Th ), 4 )
+def kay( Th ) :
+    assert Th > 0. if isinstance( Th, float ) else all( Th > 0. )
+    return math.log( 2 ) / Th
 
 # return rate of pressure change in bar/min
 # d0 : start pressure, bar
@@ -46,13 +46,13 @@ def dP_dt( d0 = 1.0, dt = 1.0, t = 1, Q = 0.79 ) :
 
 def schreiner( Pi = 0.7451, Palv = 0.7451, t = 1, R = 0, k = 0.1386, verbose = False ) :
 
-    assert float( k ) != 0.0
-    x1 = float( R ) * (float( t ) - 1.0 / float( k ))
-    x2 = float( Palv ) - float( Pi ) - float( R ) / float( k )
-    x3 = math.e ** (float( -k ) * float( t ))
-    rc = round( float( Palv ) + x1 - x2 * x3, 4 )
+    assert k != 0. if isinstance( k, float ) else all( k != 0. )
+    x1 = R * (t - 1. / k)
+    x2 = Palv - Pi - R / k
+    x3 = math.e ** ( -k * t )
+    rc = Palv + x1 - x2 * x3
     if verbose : print( "x1: %f, x2: %f, x3: %f, rc: %f\n" % (x1, x2, x3, rc,) )
-    return round( rc, 4 )
+    return rc
 
 # M-value: workman to buhlmann
 # P is ambient pressure in bar
