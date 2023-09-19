@@ -59,11 +59,15 @@ class Dive( object ) :
                 "b" : ZHL[tc]["b"],
                 "P" : sp,
             } )
+        self.TC = Utilities.TableValues.fetchZHL( 16, 'N' )
+        self.TC['P'] = sp
 
         # init. ceiling
+        self.TC['C'] = Equations.buhlmann( self.TC['P'], self.TC['a'], self.TC['b'], gf = self._GFHi )
         for i in range( len( self._TCs ) ) :
-            self._TCs[i]["C"] = self._runBuhlmanTC_( i )
-            
+            self._TCs[i]['C'] = self._runBuhlmanTC_( i )
+            assert abs( self._TCs[i]['C'] - self.TC.loc[ i+1, 'C' ] ) < 1e-4
+
         if self._verbose : pprint.pprint( self._TCs )
 
     @property

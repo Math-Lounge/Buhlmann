@@ -131,12 +131,12 @@ def ndl( Palv = 0.7451, M0 = 2.9624, t = 0, R = 0, k = 0.1386, verbose = False )
 #
 def buhlmann( Pn, an, bn, Phe = 0, ahe = 0, bhe = 0, gf = 1 ) :
 
-    P = float( Pn ) + float( Phe )
-    assert float( P ) != 0.0
-    a = (float( an ) * float( Pn ) + float( ahe ) * float( Phe )) / P
-    b = (float( bn ) * float( Pn ) + float( bhe ) * float( Phe )) / P
-    num = float( P ) - float( a ) * float( gf )
-    den = float( gf ) / float( b ) + 1.0 - float( gf )
-    assert den != 0.0
+    P = Pn + Phe
+    assert P != 0. if isinstance( P, float ) else all( P != 0. )
+    a = (an * Pn + ahe * Phe) / P
+    b = (bn * Pn + bhe * Phe) / P
+    num = P - a * gf
+    den = gf / b + 1. - gf
+    assert den != 0. if isinstance( den, float ) else all( den != 0. )
     rc = num / den
-    return round( rc, 4 )
+    return rc
