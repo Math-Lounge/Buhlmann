@@ -109,14 +109,12 @@ class MValueConversion (object):
 # M0: surfacing M-value as per Workman
 #
 def ndl( Palv = 0.7451, M0 = 2.9624, t = 0, R = 0, k = 0.1386, verbose = False ) :
-
-# (M0 - Palv - R * (t - 1/k)) * math.e ** (k * t) + Palv - R / k
-    assert float( k ) != 0.0
-    x1 = float( M0 ) - float( Palv ) - float( R ) * (float( t ) - 1.0 / float( k ))
-    x2 = math.e ** (float( k ) * float( t ))
-    rc = x1 * x2 + float( Palv ) - float( R ) / float( k )
-    if verbose : print( "x1: %f, x2: %f, rc: %f\n" % (x1, x2, rc,) )
-    return round( rc, 4 )
+    # (M0 - Palv - R * (t - 1/k)) * math.e ** (k * t) + Palv - R / k
+    assert k != 0. if isinstance( k, float ) else all( k != 0. )
+    x1 = M0 - Palv - R * (t - 1. / k)
+    x2 = math.e ** (k * t)
+    rc = x1 * x2 + Palv - R / k
+    return rc
 
 # Buhlman formula with GF and Helium
 # returns safe ascent ceiling

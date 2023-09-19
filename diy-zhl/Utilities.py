@@ -28,7 +28,7 @@ class TableValues (object):
             drop = [ 1, 1.1, ] [use_4m_not_5m]
             df = df [~df.index.isin ([drop])]
             df.index = np.floor (df.index).astype (int)
-        df ['M0'], df ['dM'] = Equations.m_b2w (df ['a'], df ['b'])
+        df ['M0'], df ['dM'] = Equations.MValueConversion.getWorkmanFromBuhlmann (df ['a'], df ['b'], 1.)
         return df
 
     @classmethod
@@ -47,8 +47,8 @@ class TimeSeriesFrame (object):
 
     @staticmethod
     def snapFromDiveObj (dive):
-        df = pd.DataFrame (dive._TCs).drop ([ 'a', 'b', ], axis = 1)
-        df ['compart_num'] = 1 + np.arange (len (dive._TCs))
+        df = dive.TC.drop ([ 'a', 'b', ], axis = 1).copy ()
+        df ['compart_num'] = 1 + np.arange (len (dive.TC))
         df ['time_min'] = dive._T
         return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', 'C': 'ceiling', })
 

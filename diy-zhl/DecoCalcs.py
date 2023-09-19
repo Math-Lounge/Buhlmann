@@ -35,10 +35,8 @@ class TimeParser( object ):
 
 class Dive( object ) :
 
-    def __init__( self, GFHi, use_4min_not_5min = False, verbose = False ) :
+    def __init__( self, GFHi, use_4min_not_5min = False ) :
 
-        self._verbose = bool( verbose )
-        
         # air, sea level, USN RQ.
         self._T = 0
         self._S = 1.0       # Surface pressure (const)
@@ -55,7 +53,8 @@ class Dive( object ) :
         kay = Equations.kay( self.TC['t'] )
         pres = Equations.schreiner( Pi = self.TC['P'], Palv = Palv, R = R, t = t, k = kay )
         ceil = Equations.buhlmann( Pn = pres, an = self.TC['a'], bn = self.TC['b'], gf = self._GFHi )
-        return pres, ceil
+        ndl = Equations.ndl( Palv = Palv, t = t, R = R, M0 = self.TC['M0'], k = kay )
+        return pres, ceil, ndl
 
     def _calcNDLTimeTC_( self, i, start = 0 ):
         Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
@@ -73,14 +72,7 @@ class Dive( object ) :
 
         Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
         R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
-        self.TC['P'], self.TC['C'] = self.updateSchreinerBuhlmann( Palv, R, t )
-        if False:
-            M0 = Equations.MValueConversion.getWorkmanFromBuhlmann( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[ 0 ]
-            self.TC['ndl'] = Equations.ndl( Palv = Palv, t = t, R = R, M0 = M0, k = kay )
+        self.TC['P'], self.TC['C'], self.TC['L'] = self.updateSchreinerBuhlmann( Palv, R, t )
 
         self._P = newP
         self._T += t
-
-        if self._verbose :
-            sys.stdout.write( "* At time %f, P %f:\n" % (self._T, self._P,) )
-            pprint.pprint( self._TCs )
