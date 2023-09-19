@@ -108,20 +108,15 @@ class Dive( object ) :
         newP = round( self._S + new_depth / 10, 1 )
         t = TimeParser.parse( newtimestr ) - self._T
 
+        Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+        R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
+
         for i in range( len( self._TCs ) ) :
-            # These two should be constant, consider moving them outside
-            Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
-            R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
-            p = Equations.schreiner(
-                Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R,
-                k = Equations.kay( Th = self._TCs[i]["t"] ),
-            )
-            M0 = Equations.m_b2w( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[ 0 ]
+            kay = Equations.kay( Th = self._TCs[i]['t'] )
+            p = Equations.schreiner( Pi = self._TCs[i]["P"], Palv = Palv, t = t, R = R, k = kay )
             if True:
-                self._TCs[i]['ndl'] = Equations.ndl(
-                    Palv = Palv, t = t, R = R, M0 = M0,
-                    k = Equations.kay( Th = self._TCs[i]["t"] ),
-                )
+                M0 = Equations.MValueConversion.getWorkmanFromBuhlmann( self._TCs[i]['a'], self._TCs[i]['b'], 1 )[ 0 ]
+                self._TCs[i]['ndl'] = Equations.ndl( Palv = Palv, t = t, R = R, M0 = M0, k = kay )
             self._TCs[i]["P"] = p
             self._TCs[i]["C"] = self._runBuhlmanTC_( i )
 
@@ -131,4 +126,3 @@ class Dive( object ) :
         if self._verbose :
             sys.stdout.write( "* At time %f, P %f:\n" % (self._T, self._P,) )
             pprint.pprint( self._TCs )
-
