@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+
 #
 # (K) Copy Rites Reversed: reuse what you like (but give credit)
 #
@@ -21,14 +21,14 @@ class Dive( object ) :
 
         # air, sea level, USN RQ.
         self._T = 0
-        self._S = 1.0       # Surface pressure (const)
-        self._P = self._S   # Current pressure (var)
-        self._Q = 0.79
-        self._RQ = 0.9
+        self._S = 1.          # Surface pressure (const)
+        self._P = self._S     # Current pressure (var)
+        self._Q = 0.79        # Inert gas fraction (N, but do include He?)
+        self._RQ = 'buhlmann'
         self._GFHi = GFHi
 
         self.TC = Utilities.TableValues.fetchZHL( 16, 'N', use_4min_not_5min = use_4min_not_5min )
-        self.TC['P'] = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+        self.TC['P'] = Equations.palv( P_ambient = self._P, inert_gas_frac = self._Q, RQ_name = self._RQ )
         self.TC['C'] = Equations.buhlmann( self.TC['P'], self.TC['a'], self.TC['b'], gf = self._GFHi )
 
     def updateSchreinerBuhlmann( self, Palv, R, t ):
@@ -39,7 +39,7 @@ class Dive( object ) :
         return pres, ceil, ndl
 
     def _calcNDLTimeTC_( self, i, start = 0 ):
-        Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+        Palv = Equations.palv( P_ambient = self._P, inert_gas_frac = self._Q, RQ_name = self._RQ )
         calc_ceil = lambda t: self._calcNDLCeilingTC_( i, Palv, 0., t )
         ceil_below_water = lambda c: c > 0.1
         return Utilities.BinarySearch.hop( calc_ceil, ceil_below_water, start, step = 1, eps = 1e-3 )
@@ -52,7 +52,7 @@ class Dive( object ) :
         newP = round( self._S + new_depth / 10, 1 )
         t = Utilities.TimeParser.parse( newtimestr ) - self._T
 
-        Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
+        Palv = Equations.palv( P_ambient = self._P, inert_gas_frac = self._Q, RQ_name = self._RQ )
         R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )
         self.TC['P'], self.TC['C'], self.TC['L'] = self.updateSchreinerBuhlmann( Palv, R, t )
 
