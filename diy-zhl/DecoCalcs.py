@@ -13,25 +13,7 @@
 # The goal here is "by the book" implementation to use for learning this stuff.
 #
 
-import re, sys
-import pprint
-
-import Constants, Equations, Utilities
-
-class TimeParser( object ):
-
-    _Pattern_ = re.compile( r"(?:(\d{1,2}):)?(\d{1,2}):(\d{1,2})" )
-
-    # helper function: takes human-readable time string like "1:30" and returns minutes: 1.5
-    @classmethod
-    def parse( cls, t = "0:0" ) :
-        if t is None : return 0
-        m = cls._Pattern_.search( str( t ).strip() )
-        if not m : raise Exception( "Invalid time string %s" % (t,) )
-        rc = float( m.group( 2 ) ) + float( m.group( 3 ) ) / 60.
-        if m.group( 1 ) is not None :
-            rc += 60. * float( m.group( 1 ) )
-        return round( rc, 1 )
+import Equations, Utilities
 
 class Dive( object ) :
 
@@ -68,7 +50,7 @@ class Dive( object ) :
         assert new_depth >= 0.0
         # if new_depth == 0. : newP = self._P
         newP = round( self._S + new_depth / 10, 1 )
-        t = TimeParser.parse( newtimestr ) - self._T
+        t = Utilities.TimeParser.parse( newtimestr ) - self._T
 
         Palv = Equations.palv( Pamb = self._P, Q = self._Q, RQ = self._RQ )
         R = Equations.dP_dt( d0 = self._P, dt = newP, t = t, Q = self._Q )

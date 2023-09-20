@@ -1,8 +1,24 @@
 
+import re
 import numpy as np
 import pandas as pd
 
 import Constants, Equations
+
+class TimeParser( object ):
+
+    _Pattern_ = re.compile( r"(?:(\d{1,2}):)?(\d{1,2}):(\d{1,2})" )
+
+    # helper function: takes human-readable time string like "1:30" and returns minutes: 1.5
+    @classmethod
+    def parse( cls, t = "0:0" ) :
+        if t is None : return 0
+        m = cls._Pattern_.search( str( t ).strip() )
+        if not m : raise Exception( "Invalid time string %s" % (t,) )
+        rc = float( m.group( 2 ) ) + float( m.group( 3 ) ) / 60.
+        if m.group( 1 ) is not None :
+            rc += 60. * float( m.group( 1 ) )
+        return rc
 
 class TableValues (object):
 
@@ -50,7 +66,7 @@ class TimeSeriesFrame (object):
         df = dive.TC.drop ([ 'a', 'b', ], axis = 1).copy ()
         df ['compart_num'] = 1 + np.arange (len (dive.TC))
         df ['time_min'] = dive._T
-        return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', 'C': 'ceiling', })
+        return df.rename (columns = { 't': 'half_life_min', 'P': 'pressure_bar', 'C': 'ceiling', 'L': 'ndl_time', })
 
     def diveUpdate (self):
         df = self.snapFromDiveObj (self.dive)
